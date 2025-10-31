@@ -1,0 +1,55 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id String @id @default(uuid())
+  email String   @unique
+  password String
+  name String
+  address String
+  role ROLE
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  sellerProfile SellerProfile?
+  sellerApplications SellerApplication[]
+}
+
+model SellerProfile{
+  id String @id @default(uuid())
+  userId String @unique
+  storeName String
+  description String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user User @relation(fields: [userId], references:[id], onDelete: Cascade, onUpdate: Cascade)
+}
+
+model SellerApplication{
+  id String @id @default(uuid())
+  userId String
+  storeName String
+  description String?
+  status SellerApplicationStatus @default(PENDING)
+  submittedAt DateTime @default(now())
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+}
+
+enum ROLE {
+  USER
+  ADMIN
+  SELLER
+}
+enum SellerApplicationStatus{
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+

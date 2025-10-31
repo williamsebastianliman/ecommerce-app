@@ -1,0 +1,119 @@
+services:
+  wcommerces-frontend:
+    container_name: wcommerces-frontend-container
+    build:
+      context: ./wcommerces-frontend
+      dockerfile: Dockerfile
+    ports:
+      - 8080:80
+    networks:
+      - wcommerces-networks
+  user-service:
+    container_name: wcommerces-usersvc-container
+    build:
+      context: ./wcommerces-backend/user-service
+      dockerfile: Dockerfile
+    ports:
+      - 3000:3000
+    networks:
+      - wcommerces-networks
+    depends_on:
+      - user-database
+    env_file: ./wcommerces-backend/user-service/.env
+
+  product-service:
+    container_name: wcommerces-productsvc-container
+    build:
+      context: ./wcommerces-backend/product-service
+      dockerfile: Dockerfile
+    ports:
+      - 3001:3000
+    networks:
+      - wcommerces-networks
+    depends_on:
+      - product-database
+    env_file: ./wcommerces-backend/product-service/.env
+    volumes:
+      - product-image-volumes:/app/assets
+
+  transaction-service:
+    container_name: wcommerces-transactionsvc-container
+    build:
+      context: ./wcommerces-backend/transaction-service
+      dockerfile: Dockerfile
+    ports:
+      - 3002:3000
+    networks:
+      - wcommerces-networks
+    depends_on:
+      - transaction-database
+    env_file: ./wcommerces-backend/transaction-service/.env
+
+  api-gateway:
+    container_name: wcommerces-apigateway-container
+    build:
+      context: ./wcommerces-backend/api-gateway
+      dockerfile: Dockerfile
+    ports:
+      - 3003:3000
+    networks:
+      - wcommerces-networks
+    depends_on:
+      - user-service
+      - product-service
+      - transaction-service
+
+  user-database:
+    container_name: user-database-container
+    image: public.ecr.aws/docker/library/mysql:latest
+    volumes:
+      - users-volumes:/var/lib/mysql
+    networks:
+      - wcommerces-networks
+    env_file: ./config/env/database.env
+    ports:
+      - 3306:3306
+  product-database:
+    container_name: product-database-container
+    image: public.ecr.aws/docker/library/mysql:latest
+    volumes:
+      - products-volumes:/var/lib/mysql
+    networks:
+      - wcommerces-networks
+    env_file: ./config/env/database.env
+    ports:
+      - 3307:3306
+
+  transaction-database:
+    container_name: transaction-database-container
+    image: public.ecr.aws/docker/library/mysql:latest
+    volumes:
+      - transactions-volumes:/var/lib/mysql
+    networks:
+      - wcommerces-networks
+    env_file: ./config/env/database.env
+    ports:
+      - 3308:3306
+
+  #For Development
+  phpmyadmin:
+    image: public.ecr.aws/docker/library/phpmyadmin:latest
+    container_name: phpmyadmin-container
+    env_file: ./config/env/phpmyadmin.env
+    networks:
+      - wcommerces-networks
+    depends_on:
+      - user-database
+      - product-database
+      - transaction-database
+    ports:
+      - 8081:80
+
+networks:
+  wcommerces-networks:
+
+volumes:
+  users-volumes:
+  products-volumes:
+  transactions-volumes:
+  product-image-volumes:
