@@ -10,6 +10,8 @@ import { join } from 'path';
 import { randomUUID } from 'crypto';
 import { CreateProductDTO } from './dto/create-product.request.dto';
 import { ProductResponseDTO } from './dto/product.response.dto';
+import { UserClientService } from '../user-client/user-client.service';
+import { TransactionClientService } from '../transaction-client/transaction-client.service';
 import { ProductsListRequestDTO } from './dto/products-list.request.dto';
 import { ProductSellerListRequestDTO } from './dto/product-seller-list.request.dto';
 import { ProductImageDTO } from './dto/product-image.request.dto';
@@ -29,7 +31,11 @@ import {
 export class ProductService {
   private readonly ASSETS_DIR = join(process.cwd(), 'assets');
 
-  constructor(private readonly prisma: PrismaService) {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly userClient: UserClientService,
+    private readonly transactionClient: TransactionClientService,
+  ) {
     this.ensureAssetsDirectory().catch((error: Error) => {
       console.error('Failed to create assets directory:', error);
     });
@@ -85,11 +91,11 @@ export class ProductService {
     }
   }
 
-  private mapToProductResponse(
+  private async mapToProductResponse(
     product: Prisma.ProductGetPayload<{
       include: { images: true };
     }>,
-  ): ProductResponseDTO {
+  ): Promise<ProductResponseDTO> {
     const response = new ProductResponseDTO();
     response.id = product.id;
     response.sellerId = product.sellerId;
@@ -106,6 +112,16 @@ export class ProductService {
       imageDto.dataBase64 = img.data;
       return imageDto;
     });
+
+    try {
+      response.seller = await this.userClient.getSellerById(product.sellerId);
+    } catch (error) {
+      console.warn(
+        `Failed to fetch seller details for ID ${product.sellerId}:`,
+        error,
+      );
+    }
+
     return response;
   }
 
@@ -116,6 +132,13 @@ export class ProductService {
     if (!dto.sellerId?.trim()) {
       throw new RpcException(
         new BadRequestException('sellerId is required').getResponse(),
+      );
+    }
+
+    const sellerExists = await this.userClient.validateSeller(dto.sellerId);
+    if (!sellerExists) {
+      throw new RpcException(
+        new BadRequestException('Invalid seller ID').getResponse(),
       );
     }
 
@@ -246,7 +269,9 @@ export class ProductService {
     ]);
 
     return {
-      data: products.map((p) => this.mapToProductResponse(p)),
+      data: await Promise.all(
+        products.map((p) => this.mapToProductResponse(p)),
+      ),
       meta: {
         total,
         page,
@@ -293,7 +318,9 @@ export class ProductService {
     ]);
 
     return {
-      data: products.map((p) => this.mapToProductResponse(p)),
+      data: await Promise.all(
+        products.map((p) => this.mapToProductResponse(p)),
+      ),
       meta: {
         total,
         page,
@@ -393,10 +420,18 @@ export class ProductService {
       );
     }
 
+    // First, clean up all cart entries that reference this product
+    await this.transactionClient.cleanupProductFromCarts(id).catch((error) => {
+      console.warn(`Failed to cleanup cart entries for product ${id}:`, error);
+      // We continue with deletion even if cart cleanup fails
+    });
+
+    // Then delete the product's images from disk
     for (const image of product.images) {
       await this.deleteImageFile(image.data);
     }
 
+    // Finally delete the product itself
     await this.prisma.product.delete({
       where: { id },
     });
