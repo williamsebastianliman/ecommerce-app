@@ -1,4 +1,5 @@
 import { ProductImageDTO } from './product-image.request.dto';
+import { SellerResponseDTO } from './seller-response.dto';
 
 export class ProductResponseDTO {
   id!: string;
@@ -8,4 +9,5 @@ export class ProductResponseDTO {
   stock!: number;
   price!: number;
   images!: ProductImageDTO[];
+  seller?: SellerResponseDTO;
 }

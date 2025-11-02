@@ -1,4 +1,4 @@
-type UserType = {
+export type UserType = {
   id: string;
   email: string;
   role: string;
@@ -6,7 +6,13 @@ type UserType = {
   address: string;
 };
 
-export type AuthResponse = {
+export type TokenResponse = {
   accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+};
+
+export type AuthResponse = {
+  tokens: TokenResponse;
   user: UserType;
 };

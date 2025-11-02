@@ -176,6 +176,29 @@ export class CartService {
     });
     return created;
   }
+  async removeProductFromAllCarts(
+    productId: string,
+  ): Promise<{ removed: number; touchedCarts: number }> {
+    const id = productId.trim();
+    const cartIds = await this.prisma.cartItem.findMany({
+      where: { productId: id },
+      select: { cartId: true },
+      distinct: ['cartId'],
+    });
+
+    const del = await this.prisma.cartItem.deleteMany({
+      where: { productId: id },
+    });
+
+    if (cartIds.length > 0) {
+      await this.prisma.cart.updateMany({
+        where: { id: { in: cartIds.map((c) => c.cartId) } },
+        data: { updatedAt: new Date() },
+      });
+    }
+
+    return { removed: del.count, touchedCarts: cartIds.length };
+  }
 
   private async toCartResponse(cart: CartWithItems): Promise<CartResponseDTO> {
     const itemsSorted = [...cart.items].sort(
@@ -212,8 +235,11 @@ export class CartService {
     return {
       id: prod.id,
       name: prod.name,
+      price: prod.price,
       description: prod.description,
-      image: first ? { id: first.id, mimeType: first.mimeType } : undefined,
+      image: first
+        ? { id: first.id, mimeType: first.mimeType, baseData: first.fileName }
+        : undefined,
     };
   }
 

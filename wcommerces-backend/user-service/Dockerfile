@@ -26,4 +26,4 @@ COPY --from=development /app/package.json ./
 
 COPY --from=development /app/package-lock.json ./
 
-ENTRYPOINT [ "sh", "-c", "npx prisma migrate deploy && npm run start:prod" ]
+ENTRYPOINT [ "sh", "-c", "npx prisma migrate deploy && npx prisma db seed && npm run start:prod" ]

@@ -10,6 +10,7 @@ import {
   Put,
   Query,
   UploadedFiles,
+  UseGuards,
   UseInterceptors,
   UsePipes,
   ValidationPipe,
@@ -19,6 +20,9 @@ import { ClientProxy } from '@nestjs/microservices';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { firstValueFrom, timeout } from 'rxjs';
 import { throwRpcAsHttp } from '../utils/rpc-to-http.util';
+import { AuthGuard } from '../auth/guards/auth.guard';
+import { Roles } from '../auth/decorators/auth.decorators';
+import { RoleType } from '../auth/types/role.types';
 
 import { CreateProductDTO } from './dto/create-product.request.dto';
 import { ProductsListRequestDTO } from './dto/products-list.request.dto';
@@ -34,6 +38,7 @@ import {
 } from './dto/product-io.dto';
 import 'multer';
 import { UpdateProductDTO } from './dto/update-product.request.dto';
+import { Public } from '../auth/decorators/public.decorator';
 
 type UpdatePayload = { id: string; dto: UpdateProductDTO };
 type IdPayload = { id: string };
@@ -50,6 +55,7 @@ type UploadedFileLike = {
   originalname: string;
 };
 @Controller('products')
+@UseGuards(AuthGuard)
 export class ProductController {
   constructor(
     @Inject('PRODUCT_CLIENT') private readonly productClient: ClientProxy,
@@ -121,6 +127,7 @@ export class ProductController {
   }
 
   @Post()
+  @Roles(RoleType.SELLER)
   @UseInterceptors(FilesInterceptor('images'))
   @UsePipes(
     new ValidationPipe({
@@ -165,6 +172,7 @@ export class ProductController {
   }
 
   @Patch(':id')
+  @Roles(RoleType.SELLER)
   @UsePipes(
     new ValidationPipe({
       transform: true,
@@ -196,6 +204,7 @@ export class ProductController {
   }
 
   @Delete(':id')
+  @Roles(RoleType.SELLER)
   async remove(@Param('id') id: string): Promise<{ ok: boolean }> {
     try {
       return await firstValueFrom(
@@ -224,6 +233,7 @@ export class ProductController {
     }
   }
 
+  @Public()
   @Get('images/:imageId')
   async getImage(
     @Param('imageId') imageId: string,

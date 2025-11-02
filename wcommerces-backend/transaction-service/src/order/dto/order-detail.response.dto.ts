@@ -8,5 +8,5 @@ export class OrderDetailResponseDTO {
   qty!: number;
   priceSnapshot!: number;
   createdAt!: Date;
-  product!: ProductInOrderResponseDTO;
+  product: ProductInOrderResponseDTO;
 }

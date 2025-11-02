@@ -10,7 +10,10 @@ export class UserClientService {
   async getSellerById(id: string): Promise<SellerResponseDTO> {
     return await firstValueFrom(
       this.client
-        .send<SellerResponseDTO, { id: string }>('seller.getById', { id })
+        .send<
+          SellerResponseDTO,
+          { id: string }
+        >('sellerProfile.getByUserId', { id })
         .pipe(timeout(5000)),
     );
   }

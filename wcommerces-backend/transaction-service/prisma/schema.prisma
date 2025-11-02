@@ -35,6 +35,9 @@ model OrderDetail {
   id String @id @default(uuid())
   orderId String
   productId String
+  productName String
+  productDescription String
+  productImage String
   sellerId String
   qty Int
   priceSnapshot Int

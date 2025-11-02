@@ -47,5 +47,3 @@ export interface StockIncrementResponse {
   updated: Array<{ id: string; stock: number }>;
   count: number;
 }
-
-// Using Prisma's built-in types for Product with images instead of custom type

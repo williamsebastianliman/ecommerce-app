@@ -26,4 +26,6 @@ COPY --from=development /app/package.json ./
 
 COPY --from=development /app/package-lock.json ./
 
-ENTRYPOINT [ "sh", "-c", "npx prisma migrate deploy && npm run start:prod" ]
+COPY --from=development /app/assets ./seed-assets
+
+ENTRYPOINT ["sh","-c","mkdir -p /app/assets && for f in img1.jpg img2.jpg; do if [ -f \"/app/seed-assets/$f\" ] && [ ! -f \"/app/assets/$f\" ]; then cp \"/app/seed-assets/$f\" \"/app/assets/$f\"; fi; done; npx prisma migrate deploy && npx prisma db seed && npm run start:prod"]

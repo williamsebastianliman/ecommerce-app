@@ -11,6 +11,7 @@ import { ClearCartDTO } from './dto/clear-cart.request.dto';
 import { ReplaceItemsDTO } from './dto/replace-items.request.dto';
 import { CartResponseDTO } from './dto/cart.response.dto';
 import { CartStatsResponseDTO } from './dto/cart-stats.response.dto';
+import { RemoveProductFromAllDTO } from './dto/remove-product-from-all.request.dto';
 
 @Controller()
 @UsePipes(
@@ -23,6 +24,13 @@ import { CartStatsResponseDTO } from './dto/cart-stats.response.dto';
 )
 export class CartController {
   constructor(private readonly service: CartService) {}
+
+  @MessagePattern('cart.removeProductFromAll')
+  removeProductFromAll(
+    @Payload() dto: RemoveProductFromAllDTO,
+  ): Promise<{ removed: number; touchedCarts: number }> {
+    return this.service.removeProductFromAllCarts(dto.productId);
+  }
 
   @MessagePattern('cart.get')
   get(@Payload() dto: GetCartDTO): Promise<CartResponseDTO> {

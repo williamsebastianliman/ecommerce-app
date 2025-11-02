@@ -1,6 +1,6 @@
 export class SellerResponseDTO {
   id!: string;
-  name!: string;
+  storeName!: string;
   description!: string;
   createdAt!: string;
   updatedAt!: string;

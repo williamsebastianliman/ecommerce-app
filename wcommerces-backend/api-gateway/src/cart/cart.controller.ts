@@ -9,6 +9,7 @@ import {
   Patch,
   Post,
   Put,
+  UseGuards,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
@@ -17,6 +18,8 @@ import { firstValueFrom, timeout } from 'rxjs';
 import { throwRpcAsHttp } from '../utils/rpc-to-http.util';
 import { CartResponseDTO } from './dto/cart.response.dto';
 import { CartStatsResponseDTO } from './dto/cart-stats.response.dto';
+import { AuthGuard } from '../auth/guards/auth.guard';
+import { RequiresUserId } from '../auth/decorators/auth.decorators';
 
 type IdParam = { userId: string };
 type ProductParam = { userId: string; productId: string };
@@ -29,6 +32,7 @@ type ReplaceItemsBody = {
 };
 
 @Controller('carts')
+@UseGuards(AuthGuard)
 @UsePipes(
   new ValidationPipe({
     transform: true,
@@ -43,6 +47,7 @@ export class CartController {
   ) {}
 
   @Get(':userId')
+  @RequiresUserId()
   async get(@Param() { userId }: IdParam): Promise<CartResponseDTO> {
     try {
       return await firstValueFrom(

@@ -8,24 +8,23 @@ import { PrismaService } from '../prisma/prisma.service';
 import { promises as fs } from 'fs';
 import { join } from 'path';
 import { randomUUID } from 'crypto';
-import { CreateProductDTO } from './dto/create-product.request.dto';
-import { ProductResponseDTO } from './dto/product.response.dto';
 import { UserClientService } from '../user-client/user-client.service';
 import { TransactionClientService } from '../transaction-client/transaction-client.service';
-import { ProductsListRequestDTO } from './dto/products-list.request.dto';
-import { ProductSellerListRequestDTO } from './dto/product-seller-list.request.dto';
-import { ProductImageDTO } from './dto/product-image.request.dto';
 import { Prisma, type ProductImage } from '.prisma/client';
 import {
+  CreateProductDTO,
+  UpdateProductDTO,
+  ProductResponseDTO,
+  ProductsListRequestDTO,
+  ProductSellerListRequestDTO,
+  ProductImageDTO,
   ImageFile,
   ImageFileResponse,
   ImageMetadata,
   PaginatedResponse,
-  // ProductWithImages removed - using Prisma types instead
   StockIncrementItem,
   StockIncrementResponse,
-  UpdateProductDTO,
-} from './dto/product-io.dto';
+} from './dto';
 
 @Injectable()
 export class ProductService {
@@ -425,11 +424,6 @@ export class ProductService {
       console.warn(`Failed to cleanup cart entries for product ${id}:`, error);
       // We continue with deletion even if cart cleanup fails
     });
-
-    // Then delete the product's images from disk
-    for (const image of product.images) {
-      await this.deleteImageFile(image.data);
-    }
 
     // Finally delete the product itself
     await this.prisma.product.delete({

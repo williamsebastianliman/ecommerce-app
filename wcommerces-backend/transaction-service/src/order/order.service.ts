@@ -17,6 +17,7 @@ import { OrderDetailResponseDTO } from './dto/order-detail.response.dto';
 import { PaginatedResponse } from './dto/paginated.response.dto';
 import { ProductInOrderResponseDTO } from './dto/product-in-order.response.dto';
 import { OrderCreatedResponseDTO } from './dto/order-created.response.dto';
+import { ProductResponseDTO } from '../product-client/dto/product.response.dto';
 
 type OrderWithDetails = Prisma.OrderGetPayload<{
   include: { orderDetails: true };
@@ -40,7 +41,7 @@ export class OrderService {
       include: { orderDetails: true },
     });
     if (!order) throw new NotFoundException('Order not found');
-    return await this.toOrderResponse(order);
+    return this.toOrderResponse(order);
   }
 
   async listForBuyer(
@@ -73,9 +74,11 @@ export class OrderService {
       );
     }
 
-    const data = await Promise.all(
-      filtered.map((o) => this.toOrderResponse(o)),
-    );
+    const data = filtered.map((o) => this.toOrderResponse(o));
+    filtered.map((o) => {
+      const a = this.toOrderResponse(o);
+      console.log('per data: ', a.orderDetails);
+    });
     return {
       data,
       meta: {
@@ -126,9 +129,7 @@ export class OrderService {
       );
     }
 
-    const data = await Promise.all(
-      filtered.map((o) => this.toOrderResponse(o)),
-    );
+    const data = filtered.map((o) => this.toOrderResponse(o));
     return {
       data,
       meta: {
@@ -155,30 +156,30 @@ export class OrderService {
       productId: i.productId.trim(),
       qty: i.quantity,
     }));
-    await Promise.all(items.map((i) => this.products.getById(i.productId)));
-    {
-      const prods = await Promise.all(
-        items.map((i) => this.products.getById(i.productId)),
-      );
-      const sellerIds = Array.from(new Set(prods.map((p) => p.sellerId)));
-      await Promise.all(sellerIds.map((sid) => this.users.getById(sid)));
-    }
+
+    const prods: ProductResponseDTO[] = await Promise.all(
+      items.map((i) => this.products.getById(i.productId)),
+    );
+    const sellerIds = Array.from(new Set(prods.map((p) => p.sellerId)));
+    await Promise.all(sellerIds.map((sid) => this.users.getById(sid)));
 
     const order = await this.prisma.$transaction(async (tx) => {
       const created = await tx.order.create({ data: { userId: dto.userId } });
-      const detailsData = await Promise.all(
-        items.map(async (i) => {
-          const prod = await this.products.getById(i.productId);
-          const priceSnapshot = this.extractPrice(prod);
-          return {
-            orderId: created.id,
-            productId: i.productId,
-            sellerId: prod.sellerId,
-            qty: i.qty,
-            priceSnapshot,
-          };
-        }),
-      );
+      const detailsData = items.map((i, idx) => {
+        const prod = prods[idx];
+        const priceSnapshot = this.extractPrice(prod);
+        const imageId = prod.images?.[0]?.dataBase64 ?? '';
+        return {
+          orderId: created.id,
+          productId: i.productId,
+          productName: prod.name,
+          productDescription: prod.description,
+          productImage: imageId,
+          sellerId: prod.sellerId,
+          qty: i.qty,
+          priceSnapshot,
+        };
+      });
       await tx.orderDetail.createMany({ data: detailsData });
       await tx.cartItem.deleteMany({ where: { cartId: cart.id } });
       return created;
@@ -200,32 +201,30 @@ export class OrderService {
       productId: i.productId.trim(),
       qty: i.qty,
     }));
-    await Promise.all(
+
+    const prods: ProductResponseDTO[] = await Promise.all(
       normalized.map((i) => this.products.getById(i.productId)),
     );
-    {
-      const prods = await Promise.all(
-        normalized.map((i) => this.products.getById(i.productId)),
-      );
-      const sellerIds = Array.from(new Set(prods.map((p) => p.sellerId)));
-      await Promise.all(sellerIds.map((sid) => this.users.getById(sid)));
-    }
+    const sellerIds = Array.from(new Set(prods.map((p) => p.sellerId)));
+    await Promise.all(sellerIds.map((sid) => this.users.getById(sid)));
 
     const order = await this.prisma.$transaction(async (tx) => {
       const created = await tx.order.create({ data: { userId: dto.userId } });
-      const detailsData = await Promise.all(
-        normalized.map(async (i) => {
-          const prod = await this.products.getById(i.productId);
-          const priceSnapshot = this.extractPrice(prod);
-          return {
-            orderId: created.id,
-            productId: i.productId,
-            sellerId: prod.sellerId,
-            qty: i.qty,
-            priceSnapshot,
-          };
-        }),
-      );
+      const detailsData = normalized.map((i, idx) => {
+        const prod = prods[idx];
+        const priceSnapshot = this.extractPrice(prod);
+        const imageId = prod.images?.[0]?.id ?? '';
+        return {
+          orderId: created.id,
+          productId: i.productId,
+          productName: prod.name,
+          productDescription: prod.description,
+          productImage: imageId,
+          sellerId: prod.sellerId,
+          qty: i.qty,
+          priceSnapshot,
+        };
+      });
       await tx.orderDetail.createMany({ data: detailsData });
       return created;
     });
@@ -236,47 +235,41 @@ export class OrderService {
     return { id: order.id, userId: order.userId, createdAt: order.createdAt };
   }
 
-  private async toOrderResponse(
-    order: OrderWithDetails,
-  ): Promise<OrderResponseDTO> {
-    const detailsSorted = [...order.orderDetails].sort(
+  private toOrderResponse(order: OrderWithDetails): OrderResponseDTO {
+    type DetailRow = OrderWithDetails['orderDetails'][number];
+
+    const detailsSorted: DetailRow[] = [...order.orderDetails].sort(
       (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
     );
-    const enriched: OrderDetailResponseDTO[] = await Promise.all(
-      detailsSorted.map(async (d) => {
-        const product = await this.loadProductSummary(d.productId);
+
+    const enriched: OrderDetailResponseDTO[] = detailsSorted.map(
+      (d: DetailRow): OrderDetailResponseDTO => {
+        const product: ProductInOrderResponseDTO = {
+          id: String(d.productId),
+          name: String(d.productName),
+          description: String(d.productDescription),
+          image: d.productImage ? String(d.productImage) : undefined,
+        };
+        console.log('product: ', product);
+
         return {
-          id: d.id,
-          orderId: d.orderId,
-          productId: d.productId,
-          sellerId: d.sellerId,
-          qty: d.qty,
-          priceSnapshot: d.priceSnapshot,
+          id: String(d.id),
+          orderId: String(d.orderId),
+          productId: String(d.productId),
+          sellerId: String(d.sellerId),
+          qty: Number(d.qty),
+          priceSnapshot: Number(d.priceSnapshot),
           createdAt: d.createdAt,
           product,
         };
-      }),
+      },
     );
+
     return {
-      id: order.id,
-      userId: order.userId,
+      id: String(order.id),
+      userId: String(order.userId),
       createdAt: order.createdAt,
       orderDetails: enriched,
-    };
-  }
-
-  private async loadProductSummary(
-    productId: string,
-  ): Promise<ProductInOrderResponseDTO> {
-    const id = productId.trim();
-    const prod = await this.products.getById(id);
-    const imgs = await this.products.listImages(id);
-    const first = Array.isArray(imgs) && imgs.length > 0 ? imgs[0] : undefined;
-    return {
-      id: prod.id,
-      name: prod.name,
-      description: prod.description,
-      image: first ? { id: first.id, mimeType: first.mimeType } : undefined,
     };
   }
 
@@ -308,12 +301,7 @@ export class OrderService {
 
   private async tryAdjustStocks(items: StockDeltaItem[]): Promise<void> {
     if (!this.hasIncrementStocks(this.products)) return;
-    try {
-      await this.products.incrementStocks({ items });
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      console.warn('[order.service] incrementStocks failed:', msg);
-    }
+    await this.products.incrementStocks({ items });
   }
 
   private hasIncrementStocks(

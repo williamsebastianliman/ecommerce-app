@@ -3,11 +3,13 @@ import { HttpService } from '@nestjs/axios';
 import type { Response } from 'express';
 import { AxiosResponse, AxiosError } from 'axios';
 import { firstValueFrom } from 'rxjs';
+import { Public } from '../auth/decorators/public.decorator';
 
 @Controller('media')
 export class MediaController {
   constructor(private readonly http: HttpService) {}
 
+  @Public()
   @Get(':file')
   async proxy(
     @Param('file') file: string,

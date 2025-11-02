@@ -8,6 +8,11 @@ services:
       - 8080:80
     networks:
       - wcommerces-networks
+    volumes:
+      - ./config/nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - api-gateway
+
   user-service:
     container_name: wcommerces-usersvc-container
     build:
@@ -58,6 +63,8 @@ services:
       - 3003:3000
     networks:
       - wcommerces-networks
+    env_file:
+      - ./wcommerces-backend/api-gateway/.env
     depends_on:
       - user-service
       - product-service
