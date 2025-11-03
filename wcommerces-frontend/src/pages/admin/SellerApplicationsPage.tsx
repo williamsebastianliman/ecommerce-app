@@ -29,12 +29,10 @@ export default function SellerApplicationsPage() {
 
   const [processingId, setProcessingId] = useState<string | null>(null);
 
-  // Toast state
   const [successMsg, setSuccessMsg] = useState("");
   const [showSuccessToast, setShowSuccessToast] = useState(false);
   const [showErrorToast, setShowErrorToast] = useState(false);
 
-  // Prevent stale overwrites during rapid filter/page changes
   const seqRef = useRef(0);
 
   const fetchApplications = async (pg = page) => {
@@ -49,7 +47,6 @@ export default function SellerApplicationsPage() {
       };
       const res: PaginatedResponse<SellerApplicationDto> =
         await listSellerApplications(query);
-
       if (mySeq !== seqRef.current) return;
 
       const data = res?.data ?? [];
@@ -59,8 +56,6 @@ export default function SellerApplicationsPage() {
       setApplications(data);
       setTotal(t);
       setTotalPages(tp);
-
-      // clamp page if server reports fewer pages than current
       if (pg > tp) setPage(tp);
     } catch (e) {
       if (mySeq !== seqRef.current) return;
@@ -74,13 +69,11 @@ export default function SellerApplicationsPage() {
     }
   };
 
-  // Load on filter or page change
   useEffect(() => {
     void fetchApplications(page);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter, page]);
 
-  // Success toast animation
   useEffect(() => {
     if (successMsg) {
       setShowSuccessToast(true);
@@ -92,7 +85,6 @@ export default function SellerApplicationsPage() {
     }
   }, [successMsg]);
 
-  // Error toast animation
   useEffect(() => {
     if (err) {
       setShowErrorToast(true);
@@ -110,7 +102,7 @@ export default function SellerApplicationsPage() {
     try {
       await approveSellerApplication(id);
       setSuccessMsg("Application approved successfully!");
-      await fetchApplications(); // refresh current page
+      await fetchApplications();
     } catch (e) {
       setErr(getErrorMessage(e, "Failed to approve application"));
     } finally {
@@ -124,7 +116,7 @@ export default function SellerApplicationsPage() {
     try {
       await rejectSellerApplication(id);
       setSuccessMsg("Application rejected successfully!");
-      await fetchApplications(); // refresh current page
+      await fetchApplications();
     } catch (e) {
       setErr(getErrorMessage(e, "Failed to reject application"));
     } finally {
@@ -132,19 +124,17 @@ export default function SellerApplicationsPage() {
     }
   };
 
-  // Build page number window (first/last with ellipses)
+  // window of page numbers (with ellipses)
   const pageNumbers = useMemo(() => {
     const span = 2;
     const nums: number[] = [];
     const start = Math.max(1, page - span);
     const end = Math.min(totalPages, page + span);
-
     if (start > 1) nums.push(1);
     if (start > 2) nums.push(-1);
     for (let i = start; i <= end; i++) nums.push(i);
     if (end < totalPages - 1) nums.push(-1);
     if (end < totalPages) nums.push(totalPages);
-
     return nums;
   }, [page, totalPages]);
 
@@ -169,7 +159,6 @@ export default function SellerApplicationsPage() {
               </div>
             </div>
           )}
-
           {err && (
             <div
               className={`pointer-events-auto transition-all duration-300 ease-out ${
@@ -193,29 +182,35 @@ export default function SellerApplicationsPage() {
         <div className="space-y-4">
           <h1 className="text-2xl font-semibold">Seller Applications</h1>
 
-          {/* Filter Card */}
+          {/* Filter (chips become horizontal scroll on mobile) */}
           <Card>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-col gap-2">
               <span className="text-sm font-medium text-gray-700">
                 Filter by Status:
               </span>
-              <div className="flex gap-2">
-                {(["PENDING", "APPROVED", "REJECTED"] as const).map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => {
-                      setStatusFilter(s);
-                      setPage(1); // reset page on filter change
-                    }}
-                    className={`px-4 py-2 rounded-xl text-sm font-medium transition ${
-                      statusFilter === s
-                        ? "bg-[#03AC0E] text-white border-2 border-[#03AC0E]"
-                        : "bg-white text-gray-700 border-2 border-gray-200 hover:border-[#03AC0E]/40"
-                    }`}
-                  >
-                    {s[0] + s.slice(1).toLowerCase()}
-                  </button>
-                ))}
+
+              {/* scroll container fixes overflow on 320–375px */}
+              <div className="flex gap-2 whitespace-nowrap overflow-x-auto [-webkit-overflow-scrolling:touch] pb-1">
+                {(["PENDING", "APPROVED", "REJECTED"] as const).map((s) => {
+                  const active = statusFilter === s;
+                  return (
+                    <button
+                      key={s}
+                      onClick={() => {
+                        setStatusFilter(s);
+                        setPage(1);
+                      }}
+                      className={`shrink-0 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-sm font-medium transition
+                        ${
+                          active
+                            ? "bg-[#03AC0E] text-white border-2 border-[#03AC0E]"
+                            : "bg-white text-gray-700 border-2 border-gray-200 hover:border-[#03AC0E]/40"
+                        }`}
+                    >
+                      {s[0] + s.slice(1).toLowerCase()}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </Card>
@@ -238,9 +233,9 @@ export default function SellerApplicationsPage() {
                   <Card key={app.id}>
                     <div className="space-y-3">
                       {/* Header */}
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <h3 className="text-lg font-semibold text-gray-900">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-lg font-semibold text-gray-900 line-clamp-1">
                             {app.storeName}
                           </h3>
                           <p className="text-sm text-gray-500">
@@ -249,13 +244,14 @@ export default function SellerApplicationsPage() {
                           </p>
                         </div>
                         <div
-                          className={`px-3 py-1 rounded-xl text-xs font-semibold ${
-                            app.status === "PENDING"
-                              ? "bg-yellow-100 text-yellow-700 border-2 border-yellow-300"
-                              : app.status === "APPROVED"
-                              ? "bg-green-100 text-green-700 border-2 border-green-300"
-                              : "bg-red-100 text-red-700 border-2 border-red-300"
-                          }`}
+                          className={`px-3 py-1 rounded-xl text-xs font-semibold shrink-0
+                            ${
+                              app.status === "PENDING"
+                                ? "bg-yellow-100 text-yellow-700 border-2 border-yellow-300"
+                                : app.status === "APPROVED"
+                                ? "bg-green-100 text-green-700 border-2 border-green-300"
+                                : "bg-red-100 text-red-700 border-2 border-red-300"
+                            }`}
                         >
                           {app.status}
                         </div>
@@ -272,12 +268,12 @@ export default function SellerApplicationsPage() {
 
                       {/* Actions */}
                       {app.status === "PENDING" ? (
-                        <div className="flex gap-3 pt-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
                           <Button
                             onClick={() => handleApprove(app.id)}
                             isLoading={processingId === app.id}
                             disabled={processingId !== null}
-                            className="flex-1 rounded-xl bg-[#03AC0E] border-2 border-[#03AC0E] text-white hover:bg-[#03940C]"
+                            className="w-full rounded-xl bg-[#03AC0E] border-2 border-[#03AC0E] text-white hover:bg-[#03940C]"
                           >
                             {processingId === app.id ? (
                               <span className="inline-flex items-center gap-2">
@@ -293,7 +289,7 @@ export default function SellerApplicationsPage() {
                             onClick={() => handleReject(app.id)}
                             isLoading={processingId === app.id}
                             disabled={processingId !== null}
-                            className="flex-1 rounded-xl border-2 border-red-500 text-red-600 hover:bg-red-50"
+                            className="w-full rounded-xl border-2 border-red-500 text-red-600 hover:bg-red-50"
                           >
                             Reject
                           </Button>
@@ -309,7 +305,7 @@ export default function SellerApplicationsPage() {
                 ))}
               </div>
 
-              {/* Pagination */}
+              {/* Pagination (compact + scrollable on small) */}
               <Card>
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div className="text-sm text-gray-600">
@@ -325,7 +321,7 @@ export default function SellerApplicationsPage() {
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1 whitespace-nowrap overflow-x-auto [-webkit-overflow-scrolling:touch] px-1">
                       <button
                         onClick={() => setPage(1)}
                         disabled={page === 1}

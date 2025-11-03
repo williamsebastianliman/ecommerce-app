@@ -47,8 +47,6 @@ import { AuthGuard } from './auth/guards/auth.guard';
     CartController,
     OrderController,
   ],
-  providers: [
-    { provide: APP_GUARD, useClass: AuthGuard }, // make it global
-  ],
+  providers: [{ provide: APP_GUARD, useClass: AuthGuard }],
 })
 export class AppModule {}

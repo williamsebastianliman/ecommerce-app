@@ -14,6 +14,8 @@ import {
 import type { CartItemResponseDTO, CartResponseDTO } from "../../dto/cart.dto";
 import { getErrorMessage } from "../../lib/errors";
 
+const rupiah = new Intl.NumberFormat("id-ID");
+
 export default function CartPage() {
   const nav = useNavigate();
   const { user } = useContext(AuthContext);
@@ -30,7 +32,6 @@ export default function CartPage() {
 
   const items: CartItemResponseDTO[] = cart?.items ?? [];
 
-  // ---- client-side fallback totals (used if /stats fails or is absent)
   const lineTotal = (it: CartItemResponseDTO) =>
     (it.product?.price ?? 0) * it.quantity;
   const clientCartTotal = (arr: CartItemResponseDTO[]) =>
@@ -44,7 +45,6 @@ export default function CartPage() {
       const s = await getStats(uid);
       setStats(s);
     } catch (e) {
-      // fall back to computing total from items you already have
       setStats({
         grandTotal: clientCartTotal(fallbackItems),
         totalItems: fallbackItems.length,
@@ -70,17 +70,12 @@ export default function CartPage() {
   };
 
   useEffect(() => {
-    // Wait a bit for auth to initialize
-    const timer = setTimeout(() => {
-      setAuthChecked(true);
-    }, 100);
-
+    const timer = setTimeout(() => setAuthChecked(true), 100);
     return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
     if (!authChecked) return;
-
     if (!user) {
       nav("/login");
       return;
@@ -89,14 +84,13 @@ export default function CartPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, authChecked]);
 
-  const update = async (productId: string, qty: number) => {
+  const update = async (productId: string, qtyRaw: number) => {
     if (!user) return;
+    const qty = Math.max(1, Number.isFinite(qtyRaw) ? Math.trunc(qtyRaw) : 1);
     setErr("");
     setBusyId(productId);
     try {
-      const next = await setItemQty(user.id, productId, {
-        quantity: Math.max(1, qty),
-      });
+      const next = await setItemQty(user.id, productId, { quantity: qty });
       setCart(next);
       await refreshStats(user.id, next.items ?? []);
     } catch (e) {
@@ -121,7 +115,6 @@ export default function CartPage() {
     }
   };
 
-  // Prefer server grandTotal; fall back to client-computed sum
   const sum = stats?.grandTotal ?? clientCartTotal(items);
 
   if (!authChecked || loading) {
@@ -156,68 +149,85 @@ export default function CartPage() {
                 const lt = lineTotal(it);
                 return (
                   <Card key={it.id}>
-                    <div className="flex items-center gap-4">
-                      <div className="h-16 w-16 rounded-xl bg-gray-100 overflow-hidden">
+                    {/* Stack on mobile, row on >=sm */}
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                      {/* Thumb */}
+                      <div className="h-18 w-full sm:w-18 sm:h-18 max-w-[84px] rounded-xl bg-gray-100 overflow-hidden">
                         {it.product.image?.id ? (
                           <img
                             src={`/api/media/${it.product.image.baseData}`}
                             className="w-full h-full object-cover"
                             alt={it.product.name}
+                            loading="lazy"
                           />
                         ) : null}
                       </div>
 
-                      <div className="flex-1">
-                        <div className="font-medium">{it.product.name}</div>
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium line-clamp-1">
+                          {it.product.name}
+                        </div>
                         <div className="text-xs text-gray-500 line-clamp-1">
                           {it.product.description}
                         </div>
                         <div className="mt-1 text-sm">
                           <span className="text-gray-600">Price: </span>
-                          <span className="font-medium">Rp{price}</span>
-                          <span className="mx-2 text-gray-400">•</span>
+                          <span className="font-medium">
+                            Rp{rupiah.format(price)}
+                          </span>
+                          <span className="mx-2 text-gray-300">•</span>
                           <span className="text-gray-600">Subtotal: </span>
                           <span className="font-semibold text-[#03AC0E]">
-                            Rp{lt}
+                            Rp{rupiah.format(lt)}
                           </span>
                         </div>
                       </div>
 
-                      <div className="w-24">
+                      {/* Qty + Remove (full width on mobile) */}
+                      <div className="flex w-full sm:w-auto items-center gap-2">
                         <Input
                           type="number"
                           min={1}
                           value={it.quantity}
                           onChange={(e) =>
-                            update(it.productId, Number(e.target.value))
+                            update(it.productId, Number(e.target.value || 1))
                           }
                           disabled={busyId === it.productId}
+                          className="w-full sm:w-24 text-center"
+                          aria-label={`Quantity for ${it.product.name}`}
                         />
+                        <Button
+                          variant="outline"
+                          onClick={() => remove(it.productId)}
+                          isLoading={busyId === it.productId}
+                          className="w-full sm:w-auto"
+                          aria-label={`Remove ${it.product.name}`}
+                        >
+                          Remove
+                        </Button>
                       </div>
-
-                      <Button
-                        variant="outline"
-                        onClick={() => remove(it.productId)}
-                        isLoading={busyId === it.productId}
-                      >
-                        Remove
-                      </Button>
                     </div>
                   </Card>
                 );
               })}
             </div>
 
+            {/* Totals card */}
             <Card>
-              <div className="flex items-center justify-between">
+              <div className="flex items-start sm:items-center justify-between gap-2">
                 <div className="font-semibold">Grand Total</div>
-                <div className="text-[#03AC0E] font-semibold">Rp{sum}</div>
+                <div className="text-[#03AC0E] font-semibold">
+                  Rp{rupiah.format(sum)}
+                </div>
               </div>
-              <div className="mt-4 flex gap-3">
-                <Button className="flex-1" onClick={() => nav("/checkout")}>
+
+              {/* Actions: stack on mobile, side-by-side on >=sm */}
+              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Button className="w-full" onClick={() => nav("/checkout")}>
                   Proceed to Checkout
                 </Button>
-                <Link to="/" className="flex-1">
+                <Link to="/" className="w-full">
                   <Button variant="outline" className="w-full">
                     Continue Shopping
                   </Button>

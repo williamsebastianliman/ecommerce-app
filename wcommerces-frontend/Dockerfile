@@ -12,7 +12,6 @@ RUN npm run build
 
 FROM public.ecr.aws/nginx/nginx:alpine AS production
 
-# The nginx.conf will be mounted as a volume
 WORKDIR /usr/share/nginx/html
 COPY --from=development /app/dist .
 

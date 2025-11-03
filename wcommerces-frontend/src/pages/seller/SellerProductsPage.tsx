@@ -17,10 +17,7 @@ const rupiah = new Intl.NumberFormat("id-ID");
 
 function thumbSrc(img?: ImageMetadata) {
   if (!img) return "";
-  if (img.dataBase64 && img.mimeType) {
-    // your backend serves images by id (dataBase64 holds the id on your setup)
-    return `/api/media/${img.dataBase64}`;
-  }
+  if (img.dataBase64 && img.mimeType) return `/api/media/${img.dataBase64}`;
   return "";
 }
 
@@ -32,20 +29,14 @@ export default function SellerProductsPage() {
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
-
-  // simple toasts
   const [okMsg, setOkMsg] = useState("");
 
-  // pagination
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(12);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
 
-  // track which product is being deleted
   const [deletingId, setDeletingId] = useState<string | null>(null);
-
-  // stale guard
   const seqRef = useRef(0);
 
   const fetchPage = async (pg: number, ps: number, query: string) => {
@@ -62,12 +53,12 @@ export default function SellerProductsPage() {
       };
       const res: PaginatedResponse<ProductResponseDTO> =
         await listProductsBySeller(dto);
-      if (mySeq !== seqRef.current) return; // stale response
+      if (mySeq !== seqRef.current) return;
       setItems(res?.data ?? []);
       setTotal(res?.meta?.total ?? 0);
       const tp = Math.max(1, res?.meta?.totalPages ?? 1);
       setTotalPages(tp);
-      if (pg > tp) setPage(tp); // clamp if needed
+      if (pg > tp) setPage(tp);
     } catch (e) {
       if (mySeq !== seqRef.current) return;
       setErr(getErrorMessage(e, "Failed to load products"));
@@ -80,14 +71,12 @@ export default function SellerProductsPage() {
     }
   };
 
-  // initial
   useEffect(() => {
     if (!user) return;
     void fetchPage(1, pageSize, "");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
-  // on search (debounced)
   useEffect(() => {
     if (!user) return;
     const h = window.setTimeout(() => {
@@ -98,14 +87,12 @@ export default function SellerProductsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q]);
 
-  // on page / pageSize change
   useEffect(() => {
     if (!user) return;
     void fetchPage(page, pageSize, q.trim());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, pageSize]);
 
-  // auto-hide toasts
   useEffect(() => {
     if (!okMsg) return;
     const t = window.setTimeout(() => setOkMsg(""), 2200);
@@ -121,7 +108,6 @@ export default function SellerProductsPage() {
   const startIdx = total === 0 ? 0 : (page - 1) * pageSize + 1;
   const endIdx = Math.min(page * pageSize, total);
 
-  // numbered pager window
   const pageNumbers = useMemo(() => {
     const span = 2;
     const nums: number[] = [];
@@ -152,7 +138,6 @@ export default function SellerProductsPage() {
     try {
       await removeProduct(id);
       setOkMsg("Product deleted.");
-      // refetch current page (will auto-clamp if last item on last page removed)
       await fetchPage(page, pageSize, q.trim());
     } catch (e) {
       setErr(getErrorMessage(e, "Failed to delete product"));
@@ -220,14 +205,14 @@ export default function SellerProductsPage() {
         </Card>
       ) : (
         <>
-          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
             {items.map((p) => {
               const img = p.images?.[0];
               const src = thumbSrc(img);
               const isDeleting = deletingId === p.id;
               return (
                 <Card key={p.id}>
-                  <div className="space-y-2">
+                  <div className="h-full flex flex-col">
                     <div className="h-40 w-full rounded-xl bg-gray-100 overflow-hidden border border-[#03AC0E]/20 flex items-center justify-center">
                       {src ? (
                         <img
@@ -240,7 +225,8 @@ export default function SellerProductsPage() {
                         <div className="text-xs text-gray-400">No Image</div>
                       )}
                     </div>
-                    <div className="px-1">
+
+                    <div className="px-1 pt-2 flex-1">
                       <div className="font-semibold line-clamp-1">{p.name}</div>
                       <div className="text-xs text-gray-500 line-clamp-2">
                         {p.description}
@@ -252,17 +238,18 @@ export default function SellerProductsPage() {
                         Stock: {p.stock}
                       </div>
                     </div>
-                    <div className="pt-2 flex gap-2">
+
+                    <div className="pt-2 flex flex-col sm:flex-row gap-2">
                       <Button
                         variant="outline"
-                        className="flex-1 rounded-xl border-2"
+                        className="w-full sm:flex-1 rounded-xl border-2"
                         onClick={() => nav(`/seller/p/${p.id}`)}
                       >
                         Update
                       </Button>
                       <Button
                         variant="outline"
-                        className="flex-1 rounded-xl border-2 !border-red-500 !text-red-600 hover:!bg-red-50"
+                        className="w-full sm:flex-1 rounded-xl border-2 !border-red-500 !text-red-600 hover:!bg-red-50"
                         disabled={isDeleting}
                         onClick={() => void onDelete(p.id, p.name)}
                       >
@@ -282,16 +269,15 @@ export default function SellerProductsPage() {
             })}
           </div>
 
-          {/* Pagination bar */}
           <Card>
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="text-sm text-gray-600">
                 Showing <span className="font-medium">{startIdx}</span>–
                 <span className="font-medium">{endIdx}</span> of{" "}
                 <span className="font-medium">{total}</span>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3 flex-wrap">
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-gray-600">Per page</span>
                   <select
@@ -311,26 +297,22 @@ export default function SellerProductsPage() {
                   </select>
                 </div>
 
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 whitespace-nowrap overflow-x-auto [-webkit-overflow-scrolling:touch] px-1">
                   <button
                     onClick={() => setPage(1)}
                     disabled={page === 1}
-                    className="px-3 py-1.5 text-sm rounded-xl border border-gray-200 bg-white text-gray-800 hover:bg-gray-50 disabled:opacity-50 disabled:text-gray-400"
+                    className="px-2.5 py-1.5 text-sm rounded-xl border border-gray-200 bg-white text-gray-800 hover:bg-gray-50 disabled:opacity-50 disabled:text-gray-400"
                   >
-                    <span aria-hidden className="mr-1">
-                      «
-                    </span>
-                    <span className="hidden sm:inline">First</span>
+                    <span aria-hidden>«</span>
+                    <span className="hidden sm:inline ml-1">First</span>
                   </button>
                   <button
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                     disabled={page === 1}
-                    className="px-3 py-1.5 text-sm rounded-xl border border-gray-200 bg-white text-gray-800 hover:bg-gray-50 disabled:opacity-50 disabled:text-gray-400"
+                    className="px-2.5 py-1.5 text-sm rounded-xl border border-gray-200 bg-white text-gray-800 hover:bg-gray-50 disabled:opacity-50 disabled:text-gray-400"
                   >
-                    <span aria-hidden className="mr-1">
-                      ‹
-                    </span>
-                    <span className="hidden sm:inline">Prev</span>
+                    <span className="hidden sm:inline mr-1">Prev</span>
+                    <span aria-hidden>‹</span>
                   </button>
 
                   {pageNumbers.map((n, idx) =>
@@ -360,7 +342,7 @@ export default function SellerProductsPage() {
                   <button
                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                     disabled={page === totalPages}
-                    className="px-3 py-1.5 text-sm rounded-xl border border-gray-200 bg-white text-gray-800 hover:bg-gray-50 disabled:opacity-50 disabled:text-gray-400"
+                    className="px-2.5 py-1.5 text-sm rounded-xl border border-gray-200 bg-white text-gray-800 hover:bg-gray-50 disabled:opacity-50 disabled:text-gray-400"
                   >
                     <span className="hidden sm:inline">Next</span>
                     <span aria-hidden className="ml-1">
@@ -370,7 +352,7 @@ export default function SellerProductsPage() {
                   <button
                     onClick={() => setPage(totalPages)}
                     disabled={page === totalPages}
-                    className="px-3 py-1.5 text-sm rounded-xl border border-gray-200 bg-white text-gray-800 hover:bg-gray-50 disabled:opacity-50 disabled:text-gray-400"
+                    className="px-2.5 py-1.5 text-sm rounded-xl border border-gray-200 bg-white text-gray-800 hover:bg-gray-50 disabled:opacity-50 disabled:text-gray-400"
                   >
                     <span className="hidden sm:inline">Last</span>
                     <span aria-hidden className="ml-1">

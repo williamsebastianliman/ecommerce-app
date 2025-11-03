@@ -419,13 +419,10 @@ export class ProductService {
       );
     }
 
-    // First, clean up all cart entries that reference this product
     await this.transactionClient.cleanupProductFromCarts(id).catch((error) => {
       console.warn(`Failed to cleanup cart entries for product ${id}:`, error);
-      // We continue with deletion even if cart cleanup fails
     });
 
-    // Finally delete the product itself
     await this.prisma.product.delete({
       where: { id },
     });
