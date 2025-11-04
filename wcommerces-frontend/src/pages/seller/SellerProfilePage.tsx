@@ -16,11 +16,12 @@ export default function SellerProfilePage() {
   useEffect(() => {
     let alive = true;
     (async () => {
-      if (!user) return;
+      if (!user?.id) return;
       setLoading(true);
       setErr("");
       try {
         const res = await getSellerProfileByUserId(user.id);
+        console.log(res);
         if (!alive) return;
         setProfile(res);
       } catch (e) {
@@ -34,7 +35,7 @@ export default function SellerProfilePage() {
     return () => {
       alive = false;
     };
-  }, [user]);
+  }, [user?.id]);
 
   if (!user) {
     return (
@@ -76,55 +77,40 @@ export default function SellerProfilePage() {
           </div>
         </Card>
       ) : (
-        <>
-          <Card>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <div className="text-xs text-gray-500">Store Name</div>
-                <div className="font-medium">{profile.storeName}</div>
-              </div>
-              <div>
-                <div className="text-xs text-gray-500">User ID</div>
-                <div className="font-mono text-sm break-all">
-                  {profile.userId}
-                </div>
-              </div>
-              <div className="md:col-span-2">
-                <div className="text-xs text-gray-500">Description</div>
-                <div className="text-sm">
-                  {profile.description || (
-                    <span className="text-gray-400">—</span>
-                  )}
-                </div>
-              </div>
-              <div>
-                <div className="text-xs text-gray-500">Created At</div>
-                <div className="text-sm">
-                  {new Date(profile.createdAt).toLocaleString()}
-                </div>
-              </div>
-              <div>
-                <div className="text-xs text-gray-500">Updated At</div>
-                <div className="text-sm">
-                  {new Date(profile.updatedAt).toLocaleString()}
-                </div>
+        <Card>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <div className="text-xs text-gray-500">Store Name</div>
+              <div className="font-medium">{profile.storeName}</div>
+            </div>
+            <div>
+              <div className="text-xs text-gray-500">Owner (User ID)</div>
+              <div className="font-mono text-sm break-all">
+                {profile.userId}
               </div>
             </div>
-          </Card>
-
-          <Card>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <div className="text-xs text-gray-500">Account Email</div>
-                <div className="text-sm">{user.email}</div>
-              </div>
-              <div>
-                <div className="text-xs text-gray-500">Role</div>
-                <div className="text-sm">{user.role}</div>
+            <div className="md:col-span-2">
+              <div className="text-xs text-gray-500">Description</div>
+              <div className="text-sm">
+                {profile.description || (
+                  <span className="text-gray-400">—</span>
+                )}
               </div>
             </div>
-          </Card>
-        </>
+            <div>
+              <div className="text-xs text-gray-500">Created At</div>
+              <div className="text-sm">
+                {new Date(profile.createdAt).toLocaleString()}
+              </div>
+            </div>
+            <div>
+              <div className="text-xs text-gray-500">Updated At</div>
+              <div className="text-sm">
+                {new Date(profile.updatedAt).toLocaleString()}
+              </div>
+            </div>
+          </div>
+        </Card>
       )}
     </div>
   );

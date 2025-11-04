@@ -6,8 +6,23 @@ import Input from "../../components/ui/Input";
 import { AuthContext } from "../../state/auth-context";
 import { createProduct } from "../../api/products.api";
 import type { CreateProductDTO } from "../../dto/product.dto";
+import { getErrorMessage } from "../../lib/errors";
+import { isAxiosError } from "axios";
 
 type Preview = { url: string; file: File };
+
+type FieldErrors = {
+  name?: string;
+  desc?: string;
+  price?: string;
+  stock?: string;
+  images?: string;
+};
+
+type BackendErrorShape = {
+  message?: string;
+  errors?: FieldErrors;
+};
 
 export default function SellerProductCreatePage() {
   const { user } = useContext(AuthContext);
@@ -24,21 +39,26 @@ export default function SellerProductCreatePage() {
   const [submitting, setSubmitting] = useState(false);
   const [err, setErr] = useState("");
   const [ok, setOk] = useState("");
+  const [fErr, setFErr] = useState<FieldErrors>({});
+
+  const intLike = (v: string) => /^\d+$/.test(v);
+
+  const validate = (): FieldErrors => {
+    const e: FieldErrors = {};
+    if (name.trim().length < 4) e.name = "Name must be at least 4 characters";
+    if (desc.trim().length < 5)
+      e.desc = "Description must be at least 5 characters";
+    if (!intLike(price) || Number(price) < 0)
+      e.price = "Price must be an integer ≥ 0";
+    if (!intLike(stock) || Number(stock) < 0)
+      e.stock = "Stock must be an integer ≥ 0";
+    if (previews.length < 1) e.images = "Add at least 1 image";
+    return e;
+  };
 
   const canSubmit = useMemo(() => {
-    const p = Number(price);
-    const s = Number(stock);
-    return (
-      user &&
-      name.trim().length >= 3 &&
-      desc.trim().length >= 3 &&
-      Number.isFinite(p) &&
-      p >= 0 &&
-      Number.isInteger(s) &&
-      s >= 0 &&
-      previews.length > 0 &&
-      !submitting
-    );
+    if (!user || submitting) return false;
+    return Object.keys(validate()).length === 0;
   }, [user, name, desc, price, stock, previews, submitting]);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -54,6 +74,11 @@ export default function SellerProductCreatePage() {
       next.push({ file: f, url: URL.createObjectURL(f) });
     });
     if (next.length) setPreviews((prev) => [...prev, ...next]);
+    setFErr((old) => {
+      const cp = { ...old };
+      if (previews.length + next.length > 0) delete cp.images;
+      return cp;
+    });
   };
 
   const onPick = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -79,13 +104,33 @@ export default function SellerProductCreatePage() {
     }
   };
 
+  const extractBackendFieldErrors = (u: unknown): FieldErrors | undefined => {
+    if (isAxiosError(u)) {
+      const data = u.response?.data as BackendErrorShape | undefined;
+      if (data?.errors && typeof data.errors === "object") return data.errors;
+    }
+    return undefined;
+  };
+
+  const extractBackendMessage = (u: unknown): string | undefined => {
+    if (isAxiosError(u)) {
+      const data = u.response?.data as BackendErrorShape | undefined;
+      if (typeof data?.message === "string") return data.message;
+    }
+    return undefined;
+  };
+
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-    if (!canSubmit) {
-      setErr("Please complete all fields and add at least one image.");
+
+    const ve = validate();
+    setFErr(ve);
+    if (Object.keys(ve).length > 0) {
+      setErr("Please fix the highlighted fields.");
       return;
     }
+
     setSubmitting(true);
     setErr("");
     setOk("");
@@ -111,8 +156,12 @@ export default function SellerProductCreatePage() {
         return [];
       });
       setTimeout(() => nav("/seller"), 500);
-    } catch (e) {
-      setErr(e instanceof Error ? e.message : "Failed to create product.");
+    } catch (u: unknown) {
+      const apiMsg = extractBackendMessage(u);
+      const msg = apiMsg ?? getErrorMessage(u, "Failed to create product.");
+      setErr(msg);
+      const apiFieldErrs = extractBackendFieldErrors(u);
+      if (apiFieldErrs) setFErr((old) => ({ ...old, ...apiFieldErrs }));
     } finally {
       setSubmitting(false);
     }
@@ -160,10 +209,20 @@ export default function SellerProductCreatePage() {
               </label>
               <Input
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  if (e.target.value.trim().length >= 4) {
+                    setFErr((o) => ({ ...o, name: undefined }));
+                  }
+                }}
                 placeholder="Product name"
+                aria-invalid={!!fErr.name}
               />
+              {fErr.name && (
+                <p className="mt-1 text-xs text-red-600">{fErr.name}</p>
+              )}
             </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Price (Rp)
@@ -173,10 +232,20 @@ export default function SellerProductCreatePage() {
                 min={0}
                 step={1}
                 value={price}
-                onChange={(e) => setPrice(e.target.value)}
+                onChange={(e) => {
+                  setPrice(e.target.value);
+                  if (/^\d+$/.test(e.target.value)) {
+                    setFErr((o) => ({ ...o, price: undefined }));
+                  }
+                }}
                 placeholder="e.g. 150000"
+                aria-invalid={!!fErr.price}
               />
+              {fErr.price && (
+                <p className="mt-1 text-xs text-red-600">{fErr.price}</p>
+              )}
             </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Stock
@@ -186,20 +255,39 @@ export default function SellerProductCreatePage() {
                 min={0}
                 step={1}
                 value={stock}
-                onChange={(e) => setStock(e.target.value)}
+                onChange={(e) => {
+                  setStock(e.target.value);
+                  if (/^\d+$/.test(e.target.value)) {
+                    setFErr((o) => ({ ...o, stock: undefined }));
+                  }
+                }}
                 placeholder="e.g. 20"
+                aria-invalid={!!fErr.stock}
               />
+              {fErr.stock && (
+                <p className="mt-1 text-xs text-red-600">{fErr.stock}</p>
+              )}
             </div>
+
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Description
               </label>
               <textarea
                 value={desc}
-                onChange={(e) => setDesc(e.target.value)}
+                onChange={(e) => {
+                  setDesc(e.target.value);
+                  if (e.target.value.trim().length >= 5) {
+                    setFErr((o) => ({ ...o, desc: undefined }));
+                  }
+                }}
                 placeholder="Describe your product…"
                 className="w-full min-h-[110px] rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#03AC0E]/40"
+                aria-invalid={!!fErr.desc}
               />
+              {fErr.desc && (
+                <p className="mt-1 text-xs text-red-600">{fErr.desc}</p>
+              )}
             </div>
           </div>
 
@@ -226,12 +314,14 @@ export default function SellerProductCreatePage() {
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="text-[#ffffff] underline underline-offset-4"
+                    className="text-[#03AC0E] underline underline-offset-4"
                   >
                     browse
                   </button>
                 </div>
-                <div className="text-xs text-gray-500">PNG, JPG, JPEG</div>
+                <div className="text-xs text-gray-500">
+                  PNG, JPG, JPEG • {previews.length} selected
+                </div>
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -242,6 +332,9 @@ export default function SellerProductCreatePage() {
                 />
               </div>
             </div>
+            {fErr.images && (
+              <p className="mt-2 text-xs text-red-600">{fErr.images}</p>
+            )}
 
             {previews.length > 0 && (
               <div className="mt-4 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">

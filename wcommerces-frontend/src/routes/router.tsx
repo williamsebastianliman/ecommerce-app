@@ -29,6 +29,7 @@ import SellerProductCreatePage from "../pages/seller/SellerProductCreatePage";
 import SellerProductDetailPage from "../pages/seller/SellerProductDetailPage";
 import RoleRedirect from "./RoleRedirect";
 import StockAdjustPage from "../pages/seller/StockAdjustPage";
+import SellerProfilePage from "../pages/seller/SellerProfilePage";
 export const router = createBrowserRouter([
   // Public
   { path: "/login", element: <LoginPage /> },
@@ -62,7 +63,7 @@ export const router = createBrowserRouter([
     ),
     children: [
       { index: true, element: <SellerProductsPage /> },
-      { path: "profile", element: <ProfilePage /> },
+      { path: "profile", element: <SellerProfilePage /> },
       { path: "products/create", element: <SellerProductCreatePage /> },
       { path: "p/:id", element: <SellerProductDetailPage /> },
       { path: "stock", element: <StockAdjustPage /> },
@@ -90,7 +91,6 @@ export const router = createBrowserRouter([
     ],
   },
 
-  // Catch-all route - redirect to root
   {
     path: "*",
     element: <RoleRedirect />,

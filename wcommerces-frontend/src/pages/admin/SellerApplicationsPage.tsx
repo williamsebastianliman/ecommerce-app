@@ -140,7 +140,6 @@ export default function SellerApplicationsPage() {
 
   return (
     <>
-      {/* Toasts */}
       <div className="fixed bottom-6 right-6 z-[9999] pointer-events-none">
         <div className="flex flex-col gap-3">
           {successMsg && (
