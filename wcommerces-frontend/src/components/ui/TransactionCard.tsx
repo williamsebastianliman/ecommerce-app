@@ -1,4 +1,3 @@
-// src/components/ui/TransactionCard.tsx
 import clsx from "clsx";
 
 type Props = {

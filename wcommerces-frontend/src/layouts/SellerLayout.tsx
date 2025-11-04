@@ -26,9 +26,7 @@ export default function SellerLayout() {
             Seller Center
           </NavLink>
 
-          {/* no-wrap, soft horizontal scroll on tiny screens */}
           <nav className="flex items-center gap-1.5 sm:gap-2 whitespace-nowrap overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch]">
-            {/* Products */}
             <NavLink to="/seller" end className={linkCls} aria-label="Products">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -47,7 +45,6 @@ export default function SellerLayout() {
               <span className="sr-only sm:not-sr-only sm:inline">Products</span>
             </NavLink>
 
-            {/* Profile */}
             <NavLink
               to="/seller/profile"
               className={linkCls}
@@ -70,7 +67,6 @@ export default function SellerLayout() {
               <span className="sr-only sm:not-sr-only sm:inline">Profile</span>
             </NavLink>
 
-            {/* Stock */}
             <NavLink to="/seller/stock" className={linkCls} aria-label="Stock">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -89,14 +85,12 @@ export default function SellerLayout() {
               <span className="sr-only sm:not-sr-only sm:inline">Stock</span>
             </NavLink>
 
-            {/* Seller email (desktop only) */}
             {user && (
               <span className="hidden md:block text-sm text-white/90 truncate max-w-[180px] px-1.5">
                 {user.email}
               </span>
             )}
 
-            {/* Logout */}
             <Button
               variant="outline"
               onClick={() => {
@@ -131,7 +125,7 @@ export default function SellerLayout() {
 
       <footer className="bg-[#03AC0E] text-white">
         <div className="max-w-7xl mx-auto px-5 py-3 text-sm text-center">
-          Seller Center • WCommerceS
+          Seller Center . WCommerceS
         </div>
       </footer>
     </div>

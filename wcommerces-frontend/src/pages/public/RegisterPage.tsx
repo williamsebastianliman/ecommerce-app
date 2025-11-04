@@ -60,7 +60,6 @@ export default function RegisterPage() {
         if (Object.keys(nextFieldErr).length > 0) {
           setFieldErr(nextFieldErr);
         } else {
-          // Fallback to a generic message if shape is unexpected
           setErr(
             (typeof data?.message === "string" && data.message) ||
               ex.message ||
@@ -68,7 +67,6 @@ export default function RegisterPage() {
           );
         }
       } else {
-        // Non-400 errors: show generic/top-level error
         setErr(
           axios.isAxiosError(ex)
             ? (ex.response?.data as { message?: string } | undefined)
@@ -85,7 +83,6 @@ export default function RegisterPage() {
     }
   };
 
-  // Helpers that also clear the field's error when edited
   const onName = (v: string) => {
     setName(v);
     if (fieldErr.name) setFieldErr((e) => ({ ...e, name: undefined }));

@@ -1,4 +1,3 @@
-// src/app.module.ts
 import { Module } from '@nestjs/common';
 import { Transport, ClientsModule } from '@nestjs/microservices';
 import { HttpModule } from '@nestjs/axios';

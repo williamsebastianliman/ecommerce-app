@@ -6,7 +6,6 @@ export const api = axios.create({
   timeout: 10000,
 });
 
-// Attach Authorization header
 api.interceptors.request.use((config) => {
   const t = getAccessToken();
   if (t) {
@@ -16,7 +15,6 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Optional: refresh on 401, then retry once
 let isRefreshing = false;
 let pending: Array<() => void> = [];
 
@@ -29,12 +27,10 @@ api.interceptors.response.use(
     if (status === 401 && !original._retry) {
       const rt = getRefreshToken();
       if (!rt || isRefreshing) {
-        // if a refresh is already ongoing, queue the retry
         if (isRefreshing) {
           await new Promise<void>((resolve) => pending.push(resolve));
           return api(original);
         }
-        // clearTokens();
         return Promise.reject(error);
       }
 
@@ -51,7 +47,6 @@ api.interceptors.response.use(
         const newRefresh: string | undefined = r.data?.refreshToken;
         if (newAccess) {
           saveTokens(newAccess, newRefresh);
-          // drain queue
           pending.forEach((fn) => fn());
           pending = [];
           return api(original);

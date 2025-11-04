@@ -36,7 +36,6 @@ export default function ProductDetail() {
         const product = await getProductById(id);
         setP(product);
 
-        // Get current cart quantity for this product
         if (user) {
           try {
             await initCart(user.id);
@@ -46,7 +45,6 @@ export default function ProductDetail() {
             );
             setCartQty(existingItem?.quantity ?? 0);
           } catch {
-            // If cart fails, just set to 0
             setCartQty(0);
           }
         }
@@ -71,7 +69,6 @@ export default function ProductDetail() {
     };
   }, [imgs]);
 
-  // Success toast animation
   useEffect(() => {
     if (ok) {
       setShowSuccessToast(true);
@@ -83,7 +80,6 @@ export default function ProductDetail() {
     }
   }, [ok]);
 
-  // Error toast animation
   useEffect(() => {
     if (err) {
       setShowErrorToast(true);
@@ -106,13 +102,11 @@ export default function ProductDetail() {
     }
     if (!p) return;
 
-    // Validation
     if (qty <= 0) {
       setErr("Quantity must be greater than 0");
       return;
     }
 
-    // Check if total quantity (cart + new) exceeds stock
     const totalQty = cartQty + qty;
     if (totalQty > p.stock) {
       setErr(
@@ -128,7 +122,6 @@ export default function ProductDetail() {
       await initCart(user.id);
       await addItem(user.id, { productId: p.id, quantity: qty });
 
-      // Update cart quantity after successful add
       setCartQty(totalQty);
       setQty(0);
       setOk(`Added ${qty} item(s) to cart successfully`);
@@ -150,15 +143,12 @@ export default function ProductDetail() {
   if (!p)
     return <div className="text-sm text-gray-500">Product not found.</div>;
 
-  // Calculate available stock (total stock - what's already in cart)
   const availableStock = p.stock - cartQty;
 
   return (
     <>
-      {/* Toast Container - Bottom Right */}
       <div className="fixed bottom-6 right-6 z-[9999] pointer-events-none">
         <div className="flex flex-col gap-3">
-          {/* Success toast */}
           {ok && (
             <div
               className={`pointer-events-auto transition-all duration-300 ease-out ${
@@ -176,7 +166,6 @@ export default function ProductDetail() {
             </div>
           )}
 
-          {/* Error toast */}
           {err && (
             <div
               className={`pointer-events-auto transition-all duration-300 ease-out ${
@@ -198,7 +187,6 @@ export default function ProductDetail() {
 
       <div className="pastel-dot-bg relative">
         <div className="grid md:grid-cols-2 gap-6">
-          {/* Carousel card */}
           <Card>
             <div className="relative aspect-square w-full rounded-xl overflow-hidden bg-gray-100 border-2 border-[#03AC0E]/60">
               {imgs.length > 0 ? (
@@ -220,11 +208,9 @@ export default function ProductDetail() {
 
                   {imgs.length > 1 && (
                     <>
-                      {/* scrims for contrast */}
                       <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-black/30 to-transparent" />
                       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/40 to-transparent" />
 
-                      {/* arrows */}
                       <button
                         onClick={prev}
                         className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-black/55 text-white px-3 py-2 text-lg shadow-lg ring-2 ring-[#03AC0E]/50 hover:bg-black/70"
@@ -240,7 +226,6 @@ export default function ProductDetail() {
                         ›
                       </button>
 
-                      {/* indicators */}
                       <div className="absolute bottom-3 inset-x-0 flex justify-center">
                         <div className="inline-flex items-center gap-1.5 rounded-full border-2 border-[#03AC0E]/80 bg-white/80 px-2 py-1 shadow-sm backdrop-blur">
                           {imgs.map((_, i) => (
@@ -264,7 +249,6 @@ export default function ProductDetail() {
             </div>
           </Card>
 
-          {/* Info card */}
           <Card>
             <div className="flex flex-col h-full">
               <div className="space-y-4 flex-1">

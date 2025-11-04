@@ -27,13 +27,11 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
 
-  // pagination state
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(24);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
 
-  // prevent stale overwrites
   const seqRef = useRef(0);
 
   const fetchPage = async (query: string, pg: number, ps: number) => {
@@ -46,17 +44,16 @@ export default function HomePage() {
         pageSize: ps,
         q: query,
       });
-      if (mySeq !== seqRef.current) return; // stale
+      if (mySeq !== seqRef.current) return;
       setItems(res?.data ?? []);
       const t = res?.meta?.total ?? 0;
       const tp = Math.max(1, res?.meta?.totalPages ?? 1);
       setTotal(t);
       setTotalPages(tp);
 
-      // clamp page if backend returns fewer total pages than current
       if (pg > tp) setPage(tp);
     } catch (e) {
-      if (mySeq !== seqRef.current) return; // stale
+      if (mySeq !== seqRef.current) return;
       setErr(getAxiosMessage(e) ?? "Failed to load products");
       setItems([]);
       setTotal(0);
@@ -67,46 +64,38 @@ export default function HomePage() {
     }
   };
 
-  // initial load
   useEffect(() => {
     void fetchPage("", 1, pageSize);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // debounce search: reset to page 1 on query change
   useEffect(() => {
     const h = window.setTimeout(() => {
       void fetchPage(q.trim(), 1, pageSize);
       setPage(1);
     }, 300);
     return () => window.clearTimeout(h);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q]);
 
-  // refetch when page or pageSize changes (no debounce)
   useEffect(() => {
     void fetchPage(q.trim(), page, pageSize);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, pageSize]);
 
-  // keep current page valid if totalPages shrinks (e.g., filter changes)
   useEffect(() => {
     if (page > totalPages) setPage(totalPages);
   }, [totalPages, page]);
 
-  // page window helper: always show first/last with ellipses if needed
   const pageNumbers = useMemo(() => {
-    const span = 2; // pages before/after current
+    const span = 2;
     const nums: number[] = [];
     const start = Math.max(1, page - span);
     const end = Math.min(totalPages, page + span);
 
     if (start > 1) nums.push(1);
-    if (start > 2) nums.push(-1); // ellipsis marker
+    if (start > 2) nums.push(-1);
 
     for (let i = start; i <= end; i++) nums.push(i);
 
-    if (end < totalPages - 1) nums.push(-1); // ellipsis marker
+    if (end < totalPages - 1) nums.push(-1);
     if (end < totalPages) nums.push(totalPages);
 
     return nums;
@@ -127,7 +116,6 @@ export default function HomePage() {
                 onChange={(e) => setQ(e.target.value)}
               />
             </div>
-            {/* Manual trigger */}
             <Button
               onClick={() => void fetchPage(q.trim(), 1, pageSize)}
               disabled={loading}
@@ -166,7 +154,6 @@ export default function HomePage() {
               ))}
             </div>
 
-            {/* Pagination bar */}
             <Card>
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div className="text-sm text-gray-600">
@@ -176,7 +163,6 @@ export default function HomePage() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
-                  {/* Page size */}
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-gray-600">Per page</span>
                     <select
@@ -196,7 +182,6 @@ export default function HomePage() {
                     </select>
                   </div>
 
-                  {/* Pager buttons */}
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => setPage(1)}

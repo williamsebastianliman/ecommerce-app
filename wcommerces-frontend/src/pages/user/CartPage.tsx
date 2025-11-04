@@ -149,9 +149,7 @@ export default function CartPage() {
                 const lt = lineTotal(it);
                 return (
                   <Card key={it.id}>
-                    {/* Stack on mobile, row on >=sm */}
                     <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-                      {/* Thumb */}
                       <div className="h-18 w-full sm:w-18 sm:h-18 max-w-[84px] rounded-xl bg-gray-100 overflow-hidden">
                         {it.product.image?.id ? (
                           <img
@@ -163,7 +161,6 @@ export default function CartPage() {
                         ) : null}
                       </div>
 
-                      {/* Info */}
                       <div className="flex-1 min-w-0">
                         <div className="font-medium line-clamp-1">
                           {it.product.name}
@@ -184,7 +181,6 @@ export default function CartPage() {
                         </div>
                       </div>
 
-                      {/* Qty + Remove (full width on mobile) */}
                       <div className="flex w-full sm:w-auto items-center gap-2">
                         <Input
                           type="number"
@@ -213,7 +209,6 @@ export default function CartPage() {
               })}
             </div>
 
-            {/* Totals card */}
             <Card>
               <div className="flex items-start sm:items-center justify-between gap-2">
                 <div className="font-semibold">Grand Total</div>
@@ -222,7 +217,6 @@ export default function CartPage() {
                 </div>
               </div>
 
-              {/* Actions: stack on mobile, side-by-side on >=sm */}
               <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Button className="w-full" onClick={() => nav("/checkout")}>
                   Proceed to Checkout

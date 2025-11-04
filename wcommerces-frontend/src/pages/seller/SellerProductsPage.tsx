@@ -74,7 +74,6 @@ export default function SellerProductsPage() {
   useEffect(() => {
     if (!user) return;
     void fetchPage(1, pageSize, "");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   useEffect(() => {
@@ -84,13 +83,11 @@ export default function SellerProductsPage() {
       void fetchPage(1, pageSize, q.trim());
     }, 300);
     return () => window.clearTimeout(h);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q]);
 
   useEffect(() => {
     if (!user) return;
     void fetchPage(page, pageSize, q.trim());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, pageSize]);
 
   useEffect(() => {

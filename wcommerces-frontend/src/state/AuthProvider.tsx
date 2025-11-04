@@ -12,7 +12,6 @@ export default function AuthProvider({
 }) {
   const [state, setState] = useState<AuthState>({ loading: true });
 
-  // Initialize from existing token and fetch current user
   useEffect(() => {
     const init = async () => {
       const t = getAccessToken();
@@ -24,14 +23,12 @@ export default function AuthProvider({
         const u = await me();
         setState({ user: u, token: t, role: u.role, loading: false });
       } catch {
-        // clearTokens();
         setState({ loading: false });
       }
     };
     void init();
   }, []);
 
-  // Sync auth state across tabs/windows
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
       if (
@@ -39,7 +36,6 @@ export default function AuthProvider({
         e.key === "access_token" ||
         e.key === "refresh_token"
       ) {
-        // Re-check auth when tokens change
         const t = getAccessToken();
         if (!t) {
           setState({ loading: false });
@@ -54,8 +50,7 @@ export default function AuthProvider({
     () => ({
       ...state,
       setAuth: (r: AuthResponse) => {
-        // Persist tokens for axios interceptor to pick up
-        console.log("[AuthProvider.setAuth] got:", r); // TEMP
+        console.log("[AuthProvider.setAuth] got:", r);
         if (!r?.accessToken) console.error("No accessToken in response!");
         saveTokens(r.accessToken, r.refreshToken);
         setState({

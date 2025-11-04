@@ -188,7 +188,7 @@ export class ProductService {
           name: dto.name.trim(),
           description: dto.description.trim(),
           stock: dto.stock ?? 0,
-          price: dto.price ?? 0, // if you added price to schema
+          price: dto.price ?? 0,
           images: {
             create: savedImages.map((img) => ({
               data: img.fileName,

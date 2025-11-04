@@ -1,4 +1,3 @@
-// src/routes/guards.tsx
 import { useContext, useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { AuthContext } from "../state/auth-context";
@@ -48,7 +47,6 @@ export function RequireRole({
   return <>{children}</>;
 }
 
-// New guard for validating token
 export function RequireValidToken({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const [validating, setValidating] = useState(true);

@@ -17,11 +17,9 @@ export default function ProfilePage() {
   const [showErrorToast, setShowErrorToast] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
 
-  // Form state
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
 
-  // Validation errors
   const [nameError, setNameError] = useState("");
   const [addressError, setAddressError] = useState("");
 
@@ -142,10 +140,8 @@ export default function ProfilePage() {
 
   return (
     <>
-      {/* Toast Container - Bottom Right */}
       <div className="fixed bottom-6 right-6 z-[9999] pointer-events-none">
         <div className="flex flex-col gap-3">
-          {/* Success toast */}
           {successMsg && (
             <div
               className={`pointer-events-auto transition-all duration-300 ease-out ${
@@ -163,7 +159,6 @@ export default function ProfilePage() {
             </div>
           )}
 
-          {/* Error toast */}
           {err && (
             <div
               className={`pointer-events-auto transition-all duration-300 ease-out ${
@@ -187,14 +182,12 @@ export default function ProfilePage() {
         <div className="max-w-2xl mx-auto space-y-4">
           <h1 className="text-2xl font-semibold">My Profile</h1>
 
-          {/* Profile Details Card */}
           <Card>
             <div className="space-y-4">
               <h2 className="text-lg font-semibold text-gray-900">
                 Profile Information
               </h2>
 
-              {/* Email (Read-only) */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Email
@@ -207,7 +200,6 @@ export default function ProfilePage() {
                 </p>
               </div>
 
-              {/* Role (Read-only) */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Role
@@ -217,7 +209,6 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              {/* Name (Editable) */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Name
@@ -241,7 +232,6 @@ export default function ProfilePage() {
                 )}
               </div>
 
-              {/* Address (Editable) */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Address
@@ -265,7 +255,6 @@ export default function ProfilePage() {
                 )}
               </div>
 
-              {/* Action Buttons */}
               <div className="flex gap-3 pt-2">
                 <Button
                   onClick={handleSave}
@@ -286,7 +275,6 @@ export default function ProfilePage() {
             </div>
           </Card>
 
-          {/* Account Details Card */}
           <Card>
             <div className="space-y-3">
               <h2 className="text-lg font-semibold text-gray-900">

@@ -5,8 +5,8 @@ export enum RoleType {
 }
 
 export interface JwtPayload {
-  sub: string; // User ID
+  sub: string;
   role: RoleType;
-  iat?: number; // Issued at
-  exp?: number; // Expiration
+  iat?: number;
+  exp?: number;
 }

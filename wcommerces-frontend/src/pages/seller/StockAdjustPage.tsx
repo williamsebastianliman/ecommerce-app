@@ -35,7 +35,6 @@ export default function StockAdjustPage() {
     setRows((r) => [...r, { id: crypto.randomUUID(), qty: 0 }]);
   const clearRows = () => setRows([]);
 
-  // product picker state
   const [pickerOpen, setPickerOpen] = useState<null | { rowId: string }>(null);
   const [pickerQ, setPickerQ] = useState("");
   const [pickerLoading, setPickerLoading] = useState(true);
@@ -87,7 +86,6 @@ export default function StockAdjustPage() {
     return () => window.clearTimeout(t);
   }, [pickerQ]);
 
-  // messages
   const [err, setErr] = useState("");
   const [ok, setOk] = useState("");
   useEffect(() => {
@@ -101,7 +99,6 @@ export default function StockAdjustPage() {
     return () => window.clearTimeout(t);
   }, [err]);
 
-  // totals
   const summary = useMemo(() => {
     const nonZero = rows.filter((r) => r.product && r.qty !== 0);
     const count = nonZero.length;
@@ -139,7 +136,6 @@ export default function StockAdjustPage() {
     }
   };
 
-  // initial row
   useEffect(() => {
     if (rows.length === 0) addRow();
   }, []);
@@ -158,7 +154,6 @@ export default function StockAdjustPage() {
       <div className="flex items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold">Stock Mutation</h1>
         <div className="flex gap-2">
-          {/* override outline hover */}
           <Button
             variant="outline"
             onClick={addRow}
@@ -197,7 +192,6 @@ export default function StockAdjustPage() {
                 key={r.id}
                 className="grid grid-cols-1 md:grid-cols-[1fr_auto_auto] gap-3 items-center"
               >
-                {/* Product picker */}
                 <div className="flex items-center gap-3">
                   <div className="h-12 w-12 rounded-xl overflow-hidden border border-[#03AC0E]/30 bg-gray-100 flex items-center justify-center">
                     {thumb ? (
@@ -220,7 +214,6 @@ export default function StockAdjustPage() {
                         : "Click Select to choose"}
                     </div>
                   </div>
-                  {/* override outline hover */}
                   <Button
                     variant="outline"
                     className="rounded-xl border-2 !transition-none hover:!bg-white hover:!opacity-100"
@@ -230,7 +223,6 @@ export default function StockAdjustPage() {
                   </Button>
                 </div>
 
-                {/* Qty spinner — remove hover effect */}
                 <div className="flex items-center gap-2">
                   <Input
                     type="number"
@@ -247,7 +239,6 @@ export default function StockAdjustPage() {
                   />
                 </div>
 
-                {/* Remove row — override outline hover (no red hover) */}
                 <div className="flex justify-end">
                   <Button
                     variant="outline"
@@ -258,7 +249,6 @@ export default function StockAdjustPage() {
                   </Button>
                 </div>
 
-                {/* Details */}
                 {r.product && (
                   <div className="md:col-span-3 text-xs text-gray-500">
                     Current price: Rp{rupiah.format(r.product.price)} — Stock:{" "}
@@ -276,7 +266,6 @@ export default function StockAdjustPage() {
             Selected: <span className="font-medium">{summary.count}</span> •
             Total Changes: <span className="font-medium">{summary.sum}</span>
           </div>
-          {/* primary button — kill hover fade */}
           <Button
             onClick={confirm}
             className="rounded-xl bg-[#03AC0E] border-2 border-[#03AC0E] text-white !transition-none hover:!bg-[#03AC0E] hover:!opacity-100"
@@ -371,7 +360,6 @@ function ProductPickerModal(props: {
                 Choose a product to mutate
               </div>
             </div>
-            {/* outline override */}
             <Button
               variant="outline"
               onClick={onClose}
@@ -404,7 +392,6 @@ function ProductPickerModal(props: {
             </div>
           ) : (
             <>
-              {/* Scrollable grid — remove hover border color */}
               <div className="px-3 pb-2 grid grid-cols-2 md:grid-cols-3 gap-3 max-h-[60vh] overflow-y-auto">
                 {products.map((p) => {
                   const img = p.images?.[0];
@@ -444,7 +431,6 @@ function ProductPickerModal(props: {
                 })}
               </div>
 
-              {/* Centered pagination */}
               <div className="px-3 pb-4 pt-3">
                 <Pagination
                   page={page}
@@ -466,7 +452,6 @@ function ProductPickerModal(props: {
   );
 }
 
-/** Pagination with NO hover effect anywhere */
 function Pagination(props: {
   page: number;
   totalPages: number;

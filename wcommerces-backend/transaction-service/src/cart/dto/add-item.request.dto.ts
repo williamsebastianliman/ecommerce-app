@@ -1,4 +1,3 @@
-// src/cart/dto/add-item.request.dto.ts
 import { IsString, IsNotEmpty, IsInt, Min } from 'class-validator';
 
 export class AddItemDTO {

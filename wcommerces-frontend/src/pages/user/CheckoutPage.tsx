@@ -27,7 +27,6 @@ export default function CheckoutPage() {
 
   const items: CartItemResponseDTO[] = useMemo(() => cart?.items ?? [], [cart]);
 
-  // client-side subtotal + total fallback
   const lineTotal = (it: CartItemResponseDTO) =>
     (it.product?.price ?? 0) * it.quantity;
   const clientCartTotal = (arr: CartItemResponseDTO[]) =>
@@ -78,10 +77,8 @@ export default function CheckoutPage() {
       return;
     }
     void refresh();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, authChecked]);
 
-  // prefer server total else fallback
   const grandTotal = stats?.grandTotal ?? clientCartTotal(items);
 
   const checkout = async () => {
@@ -95,12 +92,9 @@ export default function CheckoutPage() {
     setPlacing(true);
     try {
       const r = await createOrderFromCart({ userId: user.id });
-      // tolerate APIs that may not return { ok } explicitly
       const succeeded = typeof r?.ok === "boolean" ? r.ok : true;
       if (succeeded) {
-        // 1) Show modal immediately so loading state doesn't hide it
         setShowSuccessModal(true);
-        // 2) Then sync server/client state in the background
         await clearCart(user.id);
         await refresh();
       } else {
@@ -118,7 +112,6 @@ export default function CheckoutPage() {
     nav("/");
   };
 
-  // Keep spinner unless the success modal is open (so we never hide it)
   if (!authChecked || (loading && !showSuccessModal)) {
     return (
       <div className="text-sm text-gray-600 flex items-center gap-2">

@@ -71,7 +71,6 @@ export default function SellerApplicationsPage() {
 
   useEffect(() => {
     void fetchApplications(page);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter, page]);
 
   useEffect(() => {
@@ -124,7 +123,6 @@ export default function SellerApplicationsPage() {
     }
   };
 
-  // window of page numbers (with ellipses)
   const pageNumbers = useMemo(() => {
     const span = 2;
     const nums: number[] = [];
@@ -181,14 +179,12 @@ export default function SellerApplicationsPage() {
         <div className="space-y-4">
           <h1 className="text-2xl font-semibold">Seller Applications</h1>
 
-          {/* Filter (chips become horizontal scroll on mobile) */}
           <Card>
             <div className="flex flex-col gap-2">
               <span className="text-sm font-medium text-gray-700">
                 Filter by Status:
               </span>
 
-              {/* scroll container fixes overflow on 320–375px */}
               <div className="flex gap-2 whitespace-nowrap overflow-x-auto [-webkit-overflow-scrolling:touch] pb-1">
                 {(["PENDING", "APPROVED", "REJECTED"] as const).map((s) => {
                   const active = statusFilter === s;
@@ -231,7 +227,6 @@ export default function SellerApplicationsPage() {
                 {applications.map((app) => (
                   <Card key={app.id}>
                     <div className="space-y-3">
-                      {/* Header */}
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1 min-w-0">
                           <h3 className="text-lg font-semibold text-gray-900 line-clamp-1">
@@ -256,7 +251,6 @@ export default function SellerApplicationsPage() {
                         </div>
                       </div>
 
-                      {/* Description */}
                       {app.description && (
                         <div className="rounded-xl border-2 border-gray-200 bg-gray-50 p-3">
                           <p className="text-sm text-gray-700">
@@ -265,7 +259,6 @@ export default function SellerApplicationsPage() {
                         </div>
                       )}
 
-                      {/* Actions */}
                       {app.status === "PENDING" ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
                           <Button
@@ -304,7 +297,6 @@ export default function SellerApplicationsPage() {
                 ))}
               </div>
 
-              {/* Pagination (compact + scrollable on small) */}
               <Card>
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div className="text-sm text-gray-600">

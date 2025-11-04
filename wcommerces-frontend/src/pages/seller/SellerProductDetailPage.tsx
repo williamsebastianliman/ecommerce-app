@@ -1,4 +1,3 @@
-// src/pages/seller/SellerProductDetailPage.tsx
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Card from "../../components/ui/Card";
@@ -36,13 +35,11 @@ export default function SellerProductDetailPage() {
   const [err, setErr] = useState("");
   const [okMsg, setOkMsg] = useState("");
 
-  // product state
   const [product, setProduct] = useState<ProductResponseDTO | null>(null);
   const [name, setName] = useState("");
   const [desc, setDesc] = useState("");
   const [price, setPrice] = useState<string>("");
 
-  // new images (to be uploaded)
   const [previews, setPreviews] = useState<Preview[]>([]);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -59,7 +56,6 @@ export default function SellerProductDetailPage() {
     );
   }, [product, name, desc, price, saving]);
 
-  // Load product
   useEffect(() => {
     let alive = true;
     (async () => {
@@ -85,7 +81,6 @@ export default function SellerProductDetailPage() {
     };
   }, [id]);
 
-  // toasts
   useEffect(() => {
     if (!okMsg) return;
     const t = window.setTimeout(() => setOkMsg(""), 2200);
@@ -98,7 +93,6 @@ export default function SellerProductDetailPage() {
     return () => window.clearTimeout(t);
   }, [err]);
 
-  // cleanup object URLs
   useEffect(() => {
     return () => previews.forEach((p) => URL.revokeObjectURL(p.url));
   }, [previews]);
@@ -146,14 +140,12 @@ export default function SellerProductDetailPage() {
     setErr("");
     setOkMsg("");
     try {
-      // Build update payload (include current stock but keep UI read-only)
       const dto: UpdateProductDTO = {
         name: name.trim(),
         description: desc.trim(),
         price: Math.floor(Number(price)),
       };
 
-      // widen the payload to include stock (backend may ignore if not supported)
       const widenDto = {
         ...dto,
         stock: product.stock,
@@ -247,7 +239,6 @@ export default function SellerProductDetailPage() {
 
       <Card>
         <form onSubmit={onSave} className="space-y-6">
-          {/* Core fields (stock shown but read-only) */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -297,7 +288,6 @@ export default function SellerProductDetailPage() {
             </div>
           </div>
 
-          {/* Existing images */}
           <div className="space-y-2">
             <div className="text-sm font-medium text-gray-700">
               Existing Images
@@ -333,7 +323,6 @@ export default function SellerProductDetailPage() {
             </div>
           </div>
 
-          {/* Add more images */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Add Images

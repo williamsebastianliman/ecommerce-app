@@ -3,9 +3,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 type Props = {
   files: File[];
   setFiles: (files: File[]) => void;
-  accept?: string; // e.g. "image/*"
-  maxFiles?: number; // e.g. 20
-  maxSizeMB?: number; // per file, e.g. 10
+  accept?: string;
+  maxFiles?: number;
+  maxSizeMB?: number;
   onError?: (msg: string) => void;
 };
 
@@ -22,7 +22,6 @@ export default function ImagePicker({
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [isOver, setIsOver] = useState(false);
 
-  // Build previews and clean up object URLs on change
   const previews = useMemo<LocalPreview[]>(
     () =>
       files.map((f) => ({
@@ -42,8 +41,6 @@ export default function ImagePicker({
 
   const emitError = (msg: string) => {
     if (onError) onError(msg);
-    // Optional: console.warn for dev visibility
-    // console.warn(msg);
   };
 
   const validateFiles = (incoming: File[]): File[] => {
@@ -62,7 +59,6 @@ export default function ImagePicker({
       return ok;
     });
 
-    // De-duplicate by (name,size,lastModified) to prevent accidental duplicates
     const exists = new Set(
       files.map((f) => `${f.name}|${f.size}|${f.lastModified}`)
     );
@@ -84,7 +80,6 @@ export default function ImagePicker({
     if (incoming.length === 0) return;
     const valid = validateFiles(incoming);
     if (valid.length > 0) setFiles([...files, ...valid]);
-    // reset input to allow re-selecting the same file name later
     e.target.value = "";
   };
 
@@ -112,7 +107,6 @@ export default function ImagePicker({
 
   return (
     <div className="space-y-3">
-      {/* hidden input */}
       <input
         ref={inputRef}
         type="file"
@@ -122,7 +116,6 @@ export default function ImagePicker({
         onChange={handlePick}
       />
 
-      {/* actions */}
       <div className="flex flex-wrap items-center gap-2">
         <button
           type="button"
@@ -136,7 +129,6 @@ export default function ImagePicker({
         </div>
       </div>
 
-      {/* drop zone */}
       <div
         onDrop={onDrop}
         onDragOver={onDragOver}
@@ -151,7 +143,6 @@ export default function ImagePicker({
         </div>
       </div>
 
-      {/* preview grid */}
       {previews.length > 0 && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {previews.map((p, i) => (

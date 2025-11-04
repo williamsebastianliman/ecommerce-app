@@ -1,19 +1,14 @@
-// src/routes/router.tsx
 import { createBrowserRouter } from "react-router-dom";
 
-// Public pages
 import LoginPage from "../pages/public/LoginPage";
 import RegisterPage from "../pages/public/RegisterPage";
 
-// Guards
 import { RequireAuth, RequireRole } from "./guards";
 
-// Layouts
 import UserLayout from "../layouts/UserLayout";
 import AdminLayout from "../layouts/AdminLayout";
 import SellerLayout from "../layouts/SellerLayout";
 
-// User pages
 import HomePage from "../pages/user/HomePage";
 import ProductDetail from "../pages/user/ProductDetail";
 import CartPage from "../pages/user/CartPage";
@@ -21,7 +16,6 @@ import CheckoutPage from "../pages/user/CheckoutPage";
 import TransactionHistoryPage from "../pages/user/TransactionHistoryPage";
 import ProfilePage from "../pages/user/ProfilePage";
 
-// Admin pages
 import SellerApplicationsPage from "../pages/admin/SellerApplicationsPage";
 import ApplySellerPage from "../pages/user/ApplySellerPage";
 import SellerProductsPage from "../pages/seller/SellerProductsPage";
@@ -31,11 +25,9 @@ import RoleRedirect from "./RoleRedirect";
 import StockAdjustPage from "../pages/seller/StockAdjustPage";
 import SellerProfilePage from "../pages/seller/SellerProfilePage";
 export const router = createBrowserRouter([
-  // Public
   { path: "/login", element: <LoginPage /> },
   { path: "/register", element: <RegisterPage /> },
 
-  // Admin (protected)
   {
     path: "/admin",
     element: (
@@ -47,11 +39,9 @@ export const router = createBrowserRouter([
     ),
     children: [
       { index: true, element: <SellerApplicationsPage /> },
-      // add more admin child routes here
     ],
   },
 
-  // Seller (protected)
   {
     path: "/seller",
     element: (
@@ -70,7 +60,6 @@ export const router = createBrowserRouter([
     ],
   },
 
-  // User storefront (protected with token validation)
   {
     path: "/",
     element: (

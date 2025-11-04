@@ -18,7 +18,6 @@ export default function TransactionHistoryPage() {
   const { user } = useContext(AuthContext);
   const nav = useNavigate();
 
-  // gate to avoid redirecting before Auth hydrates
   const [authChecked, setAuthChecked] = useState(false);
   useEffect(() => {
     const t = setTimeout(() => setAuthChecked(true), 100);
@@ -36,7 +35,6 @@ export default function TransactionHistoryPage() {
 
   const [selected, setSelected] = useState<OrderResponseDTO | null>(null);
 
-  // Prevent stale responses overwriting newer ones
   const seqRef = useRef(0);
 
   const fetchPage = async (pg: number, ps: number) => {
@@ -57,7 +55,7 @@ export default function TransactionHistoryPage() {
       setOrders(data);
       setTotal(t);
       setTotalPages(tp);
-      if (pg > tp) setPage(tp); // clamp if backend reports fewer pages
+      if (pg > tp) setPage(tp);
     } catch (e) {
       if (mySeq !== seqRef.current) return;
       setErr(getErrorMessage(e, "Failed to load transactions"));
@@ -77,15 +75,12 @@ export default function TransactionHistoryPage() {
       return;
     }
     void fetchPage(page, pageSize);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, authChecked, page, pageSize]);
 
-  // keep current page valid if totalPages shrinks
   useEffect(() => {
     if (page > totalPages) setPage(totalPages);
   }, [totalPages, page]);
 
-  // page number window (always show first/last with ellipses)
   const pageNumbers = useMemo(() => {
     const span = 2;
     const nums: number[] = [];
@@ -93,7 +88,7 @@ export default function TransactionHistoryPage() {
     const end = Math.min(totalPages, page + span);
 
     if (start > 1) nums.push(1);
-    if (start > 2) nums.push(-1); // ellipses
+    if (start > 2) nums.push(-1);
 
     for (let i = start; i <= end; i++) nums.push(i);
 
@@ -149,7 +144,6 @@ export default function TransactionHistoryPage() {
             ))}
           </div>
 
-          {/* Pagination bar */}
           <Card>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="text-sm text-gray-600">
@@ -159,7 +153,6 @@ export default function TransactionHistoryPage() {
               </div>
 
               <div className="flex flex-wrap items-center gap-2">
-                {/* Page size */}
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-gray-600">Per page</span>
                   <select
@@ -178,7 +171,6 @@ export default function TransactionHistoryPage() {
                   </select>
                 </div>
 
-                {/* Pager buttons */}
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => setPage(1)}
@@ -271,7 +263,6 @@ function OrderDetailModal({
   const rows = useMemo(() => order.orderDetails, [order]);
   const sum = rows.reduce((s, d) => s + d.priceSnapshot * d.qty, 0);
 
-  // Close on ESC & lock body scroll
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
